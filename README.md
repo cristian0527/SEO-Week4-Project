@@ -1,6 +1,4 @@
-# 📚 Motion 
-
-# 📘 StudyTracker: Academic Planner with Google Calendar & AI Integration
+ # 📘 StudyTracker: Academic Planner with Google Calendar & AI Integration
 
 **StudyTracker** is an intelligent academic planner designed for students who want to stay organized, manage their time effectively, and never miss a deadline. Unlike generic tools, StudyTracker integrates directly with Google Calendar and leverages AI to generate personalized study plans and insights.
 
