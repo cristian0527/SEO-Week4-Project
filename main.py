@@ -1,16 +1,45 @@
 import os
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-from flask import Flask, redirect, url_for, session, request
+from flask import Flask, render_template, flash, redirect, url_for, session, request
+from flask_bcrypt import Bcrypt
+from flask_behind_proxy import FlaskBehindProxy
+from forms import RegistrationForm, LoginForm
+from users import users_db, add_user, get_user_by_email
 from google_auth_oauthlib.flow import Flow
 from apis.google_calendar import load_credentials, save_credentials, list_upcoming_events
 from apis.gemini import gemini_study_planner
 
 app = Flask(__name__)
+proxied = FlaskBehindProxy(app)
+bcrypt = Bcrypt(app)
 app.secret_key = '2c68ac92b8611f9d78c491ca03495f66'
 
 SCOPES = ['https://www.googleapis.com/auth/calendar']
 REDIRECT_URI = 'https://managerricardo-librafrank-3000.codio.io/oauth2callback'
+
+@app.route('/')
+def home():
+    return render_template('home.html', subtitle="Home Page", text="This is the home page.")
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegistrationForm()
+    if form.validate_on_submit(): 
+        hashed_password = bcrypt.generate_password_hash(form.password.data).decode('utf-8')
+        user = {
+            'username': form.username.data,
+            'email': form.email.data,
+            'password': hashed_password
+        }
+        if get_user_by_email(user['email']):
+            flash('Email already exists. Please log in.', 'danger')
+            return redirect(url_for('login'))
+        else:
+            add_user(user)
+            flash(f'Account created for {form.username.data}!', 'success')
+            return redirect(url_for('home')) 
+    return render_template('register.html', title='Register', form=form)
 
 @app.route('/plan')
 def index():
