@@ -2,7 +2,9 @@ import sqlalchemy as db
 import datetime
 
 # Connect to SQLite DB (this creates the file automatically)
-engine = db.create_engine('sqlite:///studyplanner.db')
+engine = db.create_engine(
+    'sqlite:///studyplanner.db',
+    connect_args={"check_same_thread": False})
 metadata = db.MetaData()
 
 # Users table: web app's regristered users
