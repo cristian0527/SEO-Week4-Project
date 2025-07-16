@@ -41,6 +41,25 @@ def register():
             return redirect(url_for('home')) 
     return render_template('register.html', title='Register', form=form)
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()
+    if form.validate_on_submit():
+        user = get_user_by_email(form.email.data)
+        if user and bcrypt.check_password_hash(user['password'], form.password.data):
+            session['user'] = user['username']
+            flash(f'Login successful as {form.username.data}!', 'success')
+            return redirect(url_for('home'))
+        else:
+            flash('Login failed. Check your email and password.', 'danger')
+    return render_template('login.html', title='Login', form=form)
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('home'))
+
 @app.route('/plan')
 def index():
     creds = load_credentials()
