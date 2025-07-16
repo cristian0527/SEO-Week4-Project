@@ -10,7 +10,7 @@ if not my_api_key:
     raise ValueError("GENAI_API_KEY not found in .env")
 
 genai.configure(api_key=my_api_key)
-model = genai.GenerativeModel("gemini-2.5-pro")
+model = genai.GenerativeModel("gemini-2.5-flash")
 
 def gemini_study_planner(calendar_summary: str, focus: str = "assignments and studying", tone: str = "supportive"):
     prompt = f"""
