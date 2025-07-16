@@ -48,7 +48,8 @@ def login():
         user = get_user_by_email(form.email.data)
         if user and bcrypt.check_password_hash(user['password'], form.password.data):
             session['user'] = user['username']
-            flash(f'Login successful as {form.username.data}!', 'success')
+            n = user['username']
+            flash(f'Login successful as {n}!', 'success')
             return redirect(url_for('home'))
         else:
             flash('Login failed. Check your email and password.', 'danger')
