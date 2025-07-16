@@ -29,6 +29,18 @@ oauth_tokens = db.Table('oauth_tokens', metadata,
     db.Column('created_at', db.DateTime, default=datetime.datetime.utcnow)
 )
 
+tasks = db.Table('tasks', metadata,
+    db.Column('id', db.Integer, primary_key=True),
+    db.Column('user_id', db.Integer, db.ForeignKey('users.id'), nullable=False),
+    db.Column('title', db.String, nullable=False),
+    db.Column('description', db.Text),
+    db.Column('due_date', db.DateTime),
+    db.Column('scheduled_time', db.DateTime),
+    db.Column('is_completed', db.Boolean, default=False),
+    db.Column('google_event', db.String),
+    db.Column('created_at', db.DateTime, default=datetime.datetime.utcnow)
+)
+
 # Create both tables 
 metadata.create_all(engine)
 
