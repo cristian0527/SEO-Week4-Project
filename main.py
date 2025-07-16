@@ -20,7 +20,7 @@ app.secret_key = '2c68ac92b8611f9d78c491ca03495f66'
 
 # Added two more scopes to gain access to email so we can send schedule to a user's google calendar 
 SCOPES = [
-    'https://www.googleapis.com/auth/calendar',
+    'https://www.googleapis.com/auth/calendar'
     'https://www.googleapis.com/auth/userinfo.email',
     'openid'
     ]
@@ -28,7 +28,8 @@ REDIRECT_URI = 'https://managerricardo-librafrank-3000.codio.io/oauth2callback'
 
 @app.route('/')
 def home():
-    return render_template('home.html', subtitle="Home Page", text="This is the home page.")
+   return render_template('home.html', subtitle="Home Page", text="This is the home page.")
+
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():

@@ -1,15 +1,10 @@
-<!DOCTYPE html>
-<html>
-<head>
-    <title>{{ subtitle }}</title>
-</head>
-<body>
-    <h1>{{ text }}</h1>
-
-    {% if session.get('user_id') %}
-        <p>Welcome back, user ID {{ session['user_id'] }}!</p>
-    {% else %}
-        <p>Please <a href="{{ url_for('login') }}">log in</a> or <a href="{{ url_for('register') }}">register</a>.</p>
-    {% endif %}
-</body>
-</html>
+{% extends 'layout.html' %}
+{% block title %}Home{% endblock %}
+{% block content %}
+  <h1 class="mb-4">Welcome to the Home Page</h1>
+  {% if user %}
+    <p>You are logged in as <strong>{{ user }}</strong>.</p>
+  {% else %}
+    <p>Please <a href="{{ url_for('login') }}">log in</a> or <a href="{{ url_for('register') }}">register</a>.</p>
+  {% endif %}
+{% endblock %}
