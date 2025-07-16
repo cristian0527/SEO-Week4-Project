@@ -10,7 +10,7 @@ def add_user(user):
     insert_query = db.insert(users).values(
         username=user['username'],
         email=user['email'],
-        hashed_password=user['hashed_password']
+        hashed_password=user['password']
     )
     with engine.begin() as conn:  
         conn.execute(insert_query)

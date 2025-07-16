@@ -28,8 +28,7 @@ REDIRECT_URI = 'https://managerricardo-librafrank-3000.codio.io/oauth2callback'
 
 @app.route('/')
 def home():
-   return render_template('home.html', subtitle="Home Page", text="This is the home page.")
-
+    return render_template('home.html', subtitle="Home Page", text="This is the home page.")
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
@@ -39,38 +38,37 @@ def register():
         user = {
             'username': form.username.data,
             'email': form.email.data,
-            'hashed_password': hashed_password
+            'password': hashed_password
         }
-        if get_user_by_email(form.email.data):
+        if get_user_by_email(user['email']):
             flash('Email already exists. Please log in.', 'danger')
             return redirect(url_for('login'))
-
-        
-        add_user(user)
-        db_user = get_user_by_email(form.email.data)
-        session['user_id'] = db_user.id
-        
-        flash(f'Account created for {form.username.data}!', 'success')
-        return redirect(url_for('home')) 
-        #print(form.errors)
-    else:
-        print("Form did not validate:", form.errors)
-
+        else:
+            add_user(user)
+            flash(f'Account created for {form.username.data}!', 'success')
+            return redirect(url_for('home')) 
     return render_template('register.html', title='Register', form=form)
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-
     if form.validate_on_submit():
         user = get_user_by_email(form.email.data)
-        if user and bcrypt.check_password_hash(user.hashed_password, form.password.data):
-            session['user_id'] = user.id
-            flash('Login successful!', 'success')
+        if user and bcrypt.check_password_hash(user['hashed_password'], form.password.data):
+            session['user'] = user['username']
+            n = user['username']
+            flash(f'Login successful as {n}!', 'success')
             return redirect(url_for('home'))
         else:
-            flash('Login failed, check credentials!', 'danger')
+            flash('Login failed. Check your email and password.', 'danger')
     return render_template('login.html', title='Login', form=form)
+
+@app.route('/logout')
+def logout():
+    session.pop('user', None)
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('home'))
+
 
 @app.route('/plan')
 def index():
