@@ -1,0 +1,103 @@
+
+{% extends 'layout.html' %}
+{% block title %}Scheduler - Kairos{% endblock %}
+{% block content %}
+
+<div class="row">
+  <div class="col-md-8 mx-auto">
+    
+    <h2 class="mb-4">🎯 Goal Scheduler</h2>
+    <p class="text-muted mb-4">Set a goal with a deadline, and we'll create a personalized study plan based on your calendar.</p>
+    
+    {% if not plan %}
+    <!-- Goal Input Form -->
+    <div class="card">
+      <div class="card-body">
+        <form method="POST">
+          <div class="mb-3">
+            <label for="goal" class="form-label">Goal Title*</label>
+            <input type="text" class="form-control" id="goal" name="goal" required 
+                   placeholder="e.g., Study for Biology Test">
+          </div>
+          
+          <div class="mb-3">
+            <label for="description" class="form-label">Description*</label>
+            <textarea class="form-control" id="description" name="description" rows="4" required
+                      placeholder="Describe what you need to accomplish and any specific requirements..."></textarea>
+          </div>
+          
+          <div class="mb-3">
+            <label for="deadline" class="form-label">Deadline*</label>
+            <input type="date" class="form-control" id="deadline" name="deadline" required>
+          </div>
+          
+          <button type="submit" class="btn btn-primary btn-lg w-100">
+            ✨ Generate Schedule
+          </button>
+        </form>
+      </div>
+    </div>
+    
+    {% else %}
+    <!-- Generated Plan Display -->
+    <div class="alert alert-success" role="alert">
+      <h4 class="alert-heading">🎉 Study Plan Generated!</h4>
+      {% if goal %}
+        <p class="mb-0">Here's your personalized plan for: <strong>{{ goal }}</strong></p>
+      {% endif %}
+    </div>
+    
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">📚 Your Study Plan</h5>
+        <button class="btn btn-outline-primary btn-sm" onclick="window.location.reload()">
+          🔄 Generate New Plan
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="bg-light p-4 rounded" style="white-space: pre-line; font-family: 'Courier New', monospace;">{{ plan }}</div>
+      </div>
+      <div class="card-footer">
+        <div class="row">
+          <div class="col-md-6">
+            <button class="btn btn-success w-100" onclick="copyPlan()">
+              📋 Copy Plan
+            </button>
+          </div>
+          <div class="col-md-6">
+            <a href="{{ url_for('authorize') }}" class="btn btn-primary w-100">
+              📅 Save to Calendar
+            </a>
+          </div>
+        </div>
+        <small class="text-muted mt-2 d-block">
+          💡 Connect your Google Calendar to automatically schedule these study sessions!
+        </small>
+      </div>
+    </div>
+    {% endif %}
+    
+  </div>
+</div>
+
+<script>
+function copyPlan() {
+  const planText = `{{ plan|safe }}`;
+  navigator.clipboard.writeText(planText).then(function() {
+    // Show success message
+    const btn = event.target;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '✅ Copied!';
+    btn.classList.remove('btn-success');
+    btn.classList.add('btn-outline-success');
+    
+    setTimeout(function() {
+      btn.innerHTML = originalText;
+      btn.classList.remove('btn-outline-success');
+      btn.classList.add('btn-success');
+    }, 2000);
+  });
+}
+</script>
+
+{% endblock %}

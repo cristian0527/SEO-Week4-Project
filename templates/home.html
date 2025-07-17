@@ -1,10 +1,278 @@
 {% extends 'layout.html' %}
-{% block title %}Home{% endblock %}
+{% block title %}Calendar - Kairos{% endblock %}
 {% block content %}
-  <h1 class="mb-4">Welcome to the Home Page</h1>
-  {% if session.user %}
-    <p>You are logged in as <strong>{{ session.user }}</strong>.</p>
-  {% else %}
-    <p>Please <a href="{{ url_for('login') }}">log in</a> or <a href="{{ url_for('register') }}">register</a>.</p>
-  {% endif %}
+
+<div class="row">
+  <!-- Calendar Section -->
+  <div class="col-md-8">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2>📅 July 2025</h2>
+      <div>
+        <button class="btn btn-outline-secondary btn-sm">‹</button>
+        <button class="btn btn-outline-secondary btn-sm">›</button>
+      </div>
+    </div>
+    
+    <!-- Calendar Grid -->
+    <div class="card">
+      <div class="card-body">
+        <!-- Calendar Header -->
+        <div class="row mb-3">
+          <div class="col text-center fw-bold text-muted">MON</div>
+          <div class="col text-center fw-bold text-muted">TUE</div>
+          <div class="col text-center fw-bold text-muted">WED</div>
+          <div class="col text-center fw-bold text-muted">THU</div>
+          <div class="col text-center fw-bold text-muted">FRI</div>
+          <div class="col text-center fw-bold text-muted">SAT</div>
+          <div class="col text-center fw-bold text-muted">SUN</div>
+        </div>
+        
+        <!-- Calendar Days -->
+        <div class="row mb-2">
+          <div class="col p-3 border" style="height: 100px;">
+            <small class="text-muted">30</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>1</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>2</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>3</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>4</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>5</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>6</small>
+          </div>
+        </div>
+        
+        <div class="row mb-2">
+          <div class="col p-3 border" style="height: 100px;">
+            <small>7</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>8</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>9</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>10</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>11</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>12</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>13</small>
+          </div>
+        </div>
+        
+        <div class="row mb-2">
+          <div class="col p-3 border" style="height: 100px;">
+            <small>14</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>15</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>16</small>
+          </div>
+          <div class="col p-3 border bg-primary text-white" style="height: 100px;">
+            <small>17</small>
+            <div class="mt-1">
+              <small class="badge bg-light text-dark">Today</small>
+            </div>
+            <!-- Show Google Calendar events for today -->
+            {% if calendar_events %}
+              {% for event in calendar_events %}
+                {% if event.start.get('date') == '2025-07-17' or (event.start.get('dateTime') and event.start.get('dateTime')[:10] == '2025-07-17') %}
+                  <div class="mt-1">
+                    <small class="badge bg-warning text-dark">{{ event.summary[:15] }}</small>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>18</small>
+            <!-- Show events for the 18th -->
+            {% if calendar_events %}
+              {% for event in calendar_events %}
+                {% if event.start.get('date') == '2025-07-18' or (event.start.get('dateTime') and event.start.get('dateTime')[:10] == '2025-07-18') %}
+                  <div class="mt-1">
+                    <small class="badge bg-info text-white">{{ event.summary[:10] }}</small>
+                  </div>
+                {% endif %}
+              {% endfor %}
+            {% endif %}
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>19</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>20</small>
+          </div>
+        </div>
+        
+        <div class="row mb-2">
+          <div class="col p-3 border" style="height: 100px;">
+            <small>21</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>22</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>23</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>24</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>25</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>26</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>27</small>
+          </div>
+        </div>
+        
+        <div class="row">
+          <div class="col p-3 border" style="height: 100px;">
+            <small>28</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>29</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>30</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small>31</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small class="text-muted">1</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small class="text-muted">2</small>
+          </div>
+          <div class="col p-3 border" style="height: 100px;">
+            <small class="text-muted">3</small>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- Todo Sidebar -->
+  <div class="col-md-4">
+    <!-- To-Do Section -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>To-Do:</h4>
+      <button class="btn btn-primary btn-sm rounded-circle" data-bs-toggle="modal" data-bs-target="#addTaskModal">+</button>
+    </div>
+    
+    <!-- Pending Tasks -->
+    {% if pending_tasks %}
+      {% for task in pending_tasks %}
+      <div class="card mb-2">
+        <div class="card-body p-3">
+          <div class="d-flex align-items-center">
+            <div class="text-success me-2">●</div>
+            <div class="flex-grow-1">
+              <strong>{{ task.title }}</strong>
+              {% if task.due_date %}
+                <br><small class="text-muted">Due: {{ task.due_date|ddmmyyyy_time }}</small>
+              {% endif %}
+            </div>
+            <form method="POST" action="{{ url_for('complete_task', task_id=task.id) }}" class="d-inline">
+              <button type="submit" class="btn btn-outline-success btn-sm">✓</button>
+            </form>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">No pending tasks. Add one above!</p>
+    {% endif %}
+    
+    <hr class="my-4">
+    
+    <!-- Done Section -->
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4>Done:</h4>
+      <button class="btn btn-outline-secondary btn-sm rounded-circle">+</button>
+    </div>
+    
+    {% if completed_tasks %}
+      {% for task in completed_tasks %}
+      <div class="card mb-2 bg-light">
+        <div class="card-body p-3">
+          <div class="d-flex align-items-center">
+            <div class="text-success me-2">●</div>
+            <div class="flex-grow-1">
+              <del class="text-muted">{{ task.title }}</del>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="text-muted">No completed tasks yet.</p>
+    {% endif %}
+  </div>
+</div>
+
+<!-- Add Task Modal -->
+<div class="modal fade" id="addTaskModal" tabindex="-1">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Add New Task</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" action="{{ url_for('add_task') }}">
+        <div class="modal-body">
+          <div class="mb-3">
+            <label for="title" class="form-label">Title*</label>
+            <input type="text" class="form-control" id="title" name="title" required>
+          </div>
+          <div class="mb-3">
+            <label for="description" class="form-label">Description</label>
+            <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+          </div>
+          <div class="mb-3">
+            <label for="link" class="form-label">Link (optional)</label>
+            <input type="url" class="form-control" id="link" name="link" placeholder="https://...">
+          </div>
+          <div class="row">
+            <div class="col-md-6">
+              <label for="due_date" class="form-label">Due Date</label>
+              <input type="date" class="form-control" id="due_date" name="due_date">
+            </div>
+            <div class="col-md-6">
+              <label for="due_time" class="form-label">Due Time</label>
+              <input type="time" class="form-control" id="due_time" name="due_time">
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary">Add Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
 {% endblock %}
