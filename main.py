@@ -60,7 +60,7 @@ def login():
             session['user'] = user['username']
             n = user['username']
             flash(f'Login successful as {n}!', 'success')
-            return redirect(url_for('home'))
+            return redirect(url_for('authorize'))
         else:
             flash('Login failed. Check your email and password.', 'danger')
     return render_template('login.html', title='Login', form=form)
@@ -124,7 +124,7 @@ def authorize():
     
     creds = load_credentials(user)
     if creds:
-        return redirect(url_for('index'))  # Already authenticated
+        return redirect(url_for('calendar'))  # Already authenticated
 
     flow = Flow.from_client_secrets_file(
         'google_calendar_credentials.json',
@@ -164,7 +164,7 @@ def oauth2callback():
     #save_credentials(session['user_id'], creds, google_email=email)
     save_credentials(user, creds, google_email=email)
     
-    return redirect(url_for('index'))
+    return redirect(url_for('calendar'))
 
 if __name__ == '__main__':
     import os
