@@ -12,6 +12,7 @@ from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
 from googleapiclient.discovery import build
 from models.db_models import get_engine, oauth_tokens
+from datetime import datetime, timedelta
 
 # Connect to database
 engine = get_engine()
@@ -98,12 +99,77 @@ def get_calendar_service(creds):
 def list_upcoming_events(creds):
     service = get_calendar_service(creds)
     now = datetime.datetime.utcnow().isoformat() + 'Z'
-    events_result = service.events().list(calendarId='primary', timeMin=now, maxResults=10, singleEvents=True, orderBy='startTime').execute()
+    events_result = service.events().list(calendarId='primary', timeMin=now, maxResults=15, singleEvents=True, orderBy='startTime').execute()
 
     return events_result.get('items', [])
 
 # To do: Create a create_event function
+def create_calendar_event(creds, event_data):
+    service = get_calendar_service(creds)
+    # Format the event data for google calendar
+    event = {
+        'summary': event_data.get('summary', 'Study Task'),
+        'description': event_data.get('description', ''),
+        'start': {
+            'dateTime': event_data['start'],
+            'timeZone': 'America/New_York',  # Adjust based on your timezone
+        },
+        'end': {
+            'dateTime': event_data['end'],
+            'timeZone': 'America/New_York',  # Adjust based on your timezone
+        },
+        'reminders': {
+            'useDefault': False,
+            'overrides': [
+                {'method': 'email', 'minutes': 24 * 60},
+                {'method': 'popup', 'minutes': 10},
+            ],
+        },
+    }
 
+    try:
+        event = service.events().insert(calendarId='primary', body=event).execute()
+        return event.get('id')
+    except Exception as e:
+        print(f"Error creating calendar event: {e}")
+        return None
+
+def create_task_event(creds, task_title, task_description, start_time, duration_minutes=60):
+    # Creates  calendar event for specific task
+    start_datetime = datetime.datetime.fromisoformat(start_time)
+    end_dattime = start_datetime + datetime.timedelta(minutes=duration_minutes)
+
+    event_data = {
+        'summary': f"📚 {task_title}",
+        'description': task_description,
+        'start': start_datetime.isoformat(),
+        'end': end_datetime.isoformat()
+    }
+
+    return create_calendar_event(creds, event_data)
+
+def get_free_time_slots(creds, start_date, end_date):
+    service = get_calendar_service(creds)
+    events_result = service.events().list(
+        calendarId='primary',
+        timeMin=start_date.isoformat() + 'Z',
+        timeMax=end_date.isoformat() + 'Z',
+        singleEvents=True,
+        orderBy='startTime'
+    ).execute()
+
+    events = events_result.get("items", [])
+    busy_times = []
+    for event in events:
+        start = event['start'].get('dateTime', event['start'].get('date'))
+        end = event['end'].get('dateTime', event['end'].get('date'))
+
+        if 'T' in start:
+            start_dt = datetime.datetime.fromisoformat(start.replace('Z', '+00:00'))
+            end_dt = datetime.datetime.fromisoformat(end.replace('Z', '+00:00'))
+            busy_times.append((start_dt, end_dt))
+    
+    return busy_times
 
 if __name__ == "__main__":
     try: 
