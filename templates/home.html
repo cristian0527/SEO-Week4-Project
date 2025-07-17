@@ -2,7 +2,7 @@
 {% block title %}Home{% endblock %}
 {% block content %}
   <h1 class="mb-4">Welcome to the Home Page</h1>
-  {% if session.user %}
+{% if session.user %}
     <p>You are logged in as <strong>{{ session.user }}</strong>.</p>
   {% else %}
     <p>Please <a href="{{ url_for('login') }}">log in</a> or <a href="{{ url_for('register') }}">register</a>.</p>
