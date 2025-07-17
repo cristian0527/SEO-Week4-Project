@@ -2,7 +2,7 @@
 import os
 os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
-from flask import Flask, render_template, flash, redirect, url_for, session, request
+from flask import Flask, render_template, flash, redirect, url_for, session, request, jsonify
 from flask_bcrypt import Bcrypt
 from flask_behind_proxy import FlaskBehindProxy
 from forms import RegistrationForm, LoginForm
@@ -116,6 +116,7 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('home'))
 
+#tested
 @app.route('/plan')
 def index():
     if 'user_id' not in session:
@@ -288,7 +289,8 @@ def authorize():
     
     creds = load_credentials(user_id)
     if creds:
-        return redirect(url_for('index'))  # Already authenticated
+        flash("Google Calendar already connected!")
+        return redirect(url_for('home'))  # Already authenticated
 
     flow = Flow.from_client_secrets_file(
         'google_calendar_credentials.json',
@@ -314,19 +316,21 @@ def oauth2callback():
     
     creds = flow.credentials
 
-    #email = creds.id_token.get("email") if creds.id_token else None
+    #email = creds.id_token.get("email") if creds.id_token else 
+    email = None
     if creds.id_token:
         try: 
             idinfo = id_token.verify_oauth2_token(creds.id_token, requests.Request())
             email = idinfo.get("email")
         except Exception as e:
             print(f"failed to verify id token {e}")
-            email = None
-    else: 
-        email = None
-    #save_credentials(session['user_id'], creds, google_email=email)
-    save_credentials(user_id, creds, google_email=email)
-    
+            #email = None
+    #else: 
+        #email = None
+    save_credentials(session['user_id'], creds, google_email=email)
+    #save_credentials(user_id, creds, google_email=email)
+
+    flash("Google Calendar connected successfully! Your events will now appear on the calendar.", "success")
     return redirect(url_for('index'))
 
 
@@ -337,10 +341,11 @@ def complete_task(task_id):
         return redirect(url_for('login'))
     
     # Update task completion status
-    update_task_completion(task_id, True)
+    update_task_compeletion(task_id, True)
     
     flash("Task Completed.", "success")
-    return redirect(url_for('todo'))
+    return redirect(request.referrer or url_for('todo'))
+    #return redirect(url_for('todo'))
 
 # SCHEDULER PAGE (goal-based planning)
 @app.route('/scheduler', methods=['GET', 'POST'])

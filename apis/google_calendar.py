@@ -4,7 +4,6 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # To check if the code even works and run smoothly ^^^
 
 import os
-import datetime
 import json
 from sqlalchemy import select, insert, update
 from google.oauth2.credentials import Credentials
@@ -98,7 +97,7 @@ def get_calendar_service(creds):
 
 def list_upcoming_events(creds):
     service = get_calendar_service(creds)
-    now = datetime.datetime.utcnow().isoformat() + 'Z'
+    now = datetime.utcnow().isoformat() + 'Z'
     events_result = service.events().list(calendarId='primary', timeMin=now, maxResults=15, singleEvents=True, orderBy='startTime').execute()
 
     return events_result.get('items', [])
@@ -136,8 +135,9 @@ def create_calendar_event(creds, event_data):
 
 def create_task_event(creds, task_title, task_description, start_time, duration_minutes=60):
     # Creates  calendar event for specific task
-    start_datetime = datetime.datetime.fromisoformat(start_time)
-    end_dattime = start_datetime + datetime.timedelta(minutes=duration_minutes)
+    start_datetime = datetime.fromisoformat(start_time)
+    #end_datetime = start_datetime + datetime.timedelta(minutes=duration_minutes)
+    end_datetime = start_datetime + timedelta(minutes=duration_minutes)
 
     event_data = {
         'summary': f"📚 {task_title}",
@@ -165,8 +165,8 @@ def get_free_time_slots(creds, start_date, end_date):
         end = event['end'].get('dateTime', event['end'].get('date'))
 
         if 'T' in start:
-            start_dt = datetime.datetime.fromisoformat(start.replace('Z', '+00:00'))
-            end_dt = datetime.datetime.fromisoformat(end.replace('Z', '+00:00'))
+            start_dt = datetime.fromisoformat(start.replace('Z', '+00:00'))
+            end_dt = datetime.fromisoformat(end.replace('Z', '+00:00'))
             busy_times.append((start_dt, end_dt))
     
     return busy_times

@@ -1,4 +1,5 @@
 import sqlalchemy as db
+from datetime import datetime
 from models.db_models import get_engine, users, tasks
 
 engine = get_engine()
@@ -60,7 +61,7 @@ def add_task_to_db(task_data):
         scheduled_time=task_data.get('scheduled_time'),
         is_completed=task_data.get('is_completed', False),
         google_event=task_data.get('google_event'),
-        created_at=datetime.now()
+        #created_at=datetime.now()
     )
     with engine.begin() as conn:
         result = conn.execute(insert_query)
