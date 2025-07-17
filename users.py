@@ -18,12 +18,12 @@ def add_user(user):
 # Get User by email (from login / register)
 def get_user_by_email(email):
     get_email = db.select(users).where(users.c.email == email)
-    return conn.execute(get_email).fetchone()
+    return conn.execute(get_email).mappings().fetchone()
 
 # Get user by ID 
 def get_user_by_id(user_id):
     get_id = db.select(users).where(users.c.id == user_id)
-    return conn.execute(get_id).fetchone()
+    return conn.execute(get_email).mappings().fetchone()
 
 def delete_user(user_email):
     delete_stmt = db.delete(users).where(users.c.email == user_email)

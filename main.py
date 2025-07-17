@@ -20,11 +20,13 @@ app.secret_key = '2c68ac92b8611f9d78c491ca03495f66'
 
 # Added two more scopes to gain access to email so we can send schedule to a user's google calendar 
 SCOPES = [
-    'https://www.googleapis.com/auth/calendar'
+    'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/userinfo.email',
     'openid'
     ]
-REDIRECT_URI = 'https://managerricardo-librafrank-3000.codio.io/oauth2callback'
+# REDIRECT_URI = 'https://managerricardo-librafrank-3000.codio.io/oauth2callback'
+REDIRECT_URI = 'https://prestodinner-riskarctic-4000.codio.io/proxy/3000/oauth2callback'
+
 
 @app.route('/')
 def home():
@@ -72,11 +74,11 @@ def logout():
 
 @app.route('/plan')
 def index():
-    if 'user_id' not in session:
+    if 'user' not in session:
         flash("Please log in first.")
         return redirect(url_for('login')) 
     
-    creds = load_credentials(session['user_id']) 
+    creds = load_credentials(session['user']) 
     if not creds:
         return redirect(url_for('authorize'))
     
@@ -87,12 +89,12 @@ def index():
 
 @app.route('/authorize')
 def authorize():
-    user_id = session.get('user_id')
-    if 'user_id' not in session:
+    user = session.get('user')
+    if 'user' not in session:
         flash("Please log in to connect Google Calendar.", "warning")
         return redirect(url_for('login')) 
     
-    creds = load_credentials(user_id)
+    creds = load_credentials(user)
     if creds:
         return redirect(url_for('index'))  # Already authenticated
 
@@ -102,12 +104,13 @@ def authorize():
         redirect_uri=REDIRECT_URI
     )
     auth_url, _ = flow.authorization_url(prompt='consent')
+    print("Redirecting user to:", auth_url)
     return redirect(auth_url)
 
 @app.route('/oauth2callback')
 def oauth2callback():
-    user_id = session.get('user_id')
-    if 'user_id' not in session:
+    user = session.get('user')
+    if 'user' not in session:
         flash("Please log in to complete Google authentication.", "warning")
         return redirect(url_for('login')) 
     
@@ -131,7 +134,7 @@ def oauth2callback():
     else: 
         email = None
     #save_credentials(session['user_id'], creds, google_email=email)
-    save_credentials(user_id, creds, google_email=email)
+    save_credentials(user, creds, google_email=email)
     
     return redirect(url_for('index'))
 
