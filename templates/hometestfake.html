@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ subtitle }}</title>
+</head>
+<body>
+    <h1>{{ text }}</h1>
+
+    {% if session.get('user_id') %}
+        <p>Welcome back, user ID {{ session['user_id'] }}!</p>
+    {% else %}
+        <p>Please <a href="{{ url_for('login') }}">log in</a> or <a href="{{ url_for('register') }}">register</a>.</p>
+    {% endif %}
+</body>
+</html>

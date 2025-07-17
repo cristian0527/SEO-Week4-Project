@@ -2,12 +2,12 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <title>{% block title %}Auth App{% endblock %}</title>
+  <title>{% block title %}Kairos{% endblock %}</title>
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
-    <a class="navbar-brand" href="{{ url_for('home') }}">Auth App</a>
+    <a class="navbar-brand" href="{{ url_for('home') }}">Kairos</a>
     <div class="navbar-nav">
       {% if session.user %}
         <a class="nav-link" href="{{ url_for('logout') }}">Logout ({{ session.user }})</a>
