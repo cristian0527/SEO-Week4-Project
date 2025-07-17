@@ -10,6 +10,9 @@
     <a class="navbar-brand" href="{{ url_for('home') }}">Kairos</a>
     <div class="navbar-nav">
       {% if session.user %}
+        <a class="nav-link" href="{{ url_for('calendar') }}">Calendar</a>
+        <!-- <a class="nav-link" href="{{ url_for('logout') }}">To-Do</a>
+        <a class="nav-link" href="{{ url_for('logout') }}">Scheduler</a> -->
         <a class="nav-link" href="{{ url_for('logout') }}">Logout ({{ session.user }})</a>
       {% else %}
         <a class="nav-link" href="{{ url_for('login') }}">Login</a>

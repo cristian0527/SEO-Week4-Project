@@ -71,6 +71,34 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('home'))
 
+@app.route('/calendar')
+def calendar():
+    if session['user'] is None:
+        flash("Please log in first.")
+        return redirect(url_for('login')) 
+    
+    creds = load_credentials(session['user']) 
+
+    if not creds:
+        return redirect(url_for('authorize'))
+
+    events = list_upcoming_events(creds)
+
+    
+    # events = list_upcoming_events(creds)
+    # summary = "\n".join([f"{e['start'].get('dateTime', e['start'].get('date'))} - {e['summary']}" for e in events])
+
+    # FullCalendar events
+    fc_events = []
+    for e in events:
+        fc_events.append({
+            "title": e['summary'],
+            "start": e['start'].get('dateTime', e['start'].get('date')),
+            "end": e['end'].get('dateTime', e['end'].get('date')),
+        })
+
+    return render_template('calendar.html', fc_events=fc_events)
+
 
 @app.route('/plan')
 def index():
