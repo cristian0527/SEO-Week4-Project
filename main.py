@@ -83,11 +83,7 @@ def calendar():
         return redirect(url_for('authorize'))
 
     events = list_upcoming_events(creds)
-
     
-    # events = list_upcoming_events(creds)
-    # summary = "\n".join([f"{e['start'].get('dateTime', e['start'].get('date'))} - {e['summary']}" for e in events])
-
     # FullCalendar events
     fc_events = []
     for e in events:

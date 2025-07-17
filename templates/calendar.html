@@ -4,9 +4,28 @@
   <h1 class="mb-4">Calendar</h1>
   {% if fc_events %}
     {% if fc_events is sequence %}
+      <link href="{{ url_for('static', filename='css/calendar-custom.css') }}" rel="stylesheet" />
       <link href='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.18/index.global.min.css' rel="stylesheet"/>
       <script src='https://cdn.jsdelivr.net/npm/fullcalendar@6.1.18/index.global.min.js'></script>
-      <div id="calendar"></div>
+      
+      <div id="main-layout">
+
+        <div id="calendar-container">
+          <div id="calendar"></div>
+        </div>
+
+        <div id="todo-container">
+          <h3>To-Do List</h3>
+          <ul id="todo-list" style="list-style: none; padding-left: 0;">
+            <li><input type="checkbox"> Finish project proposal</li>
+            <li><input type="checkbox"> Email client follow-up</li>
+            <li><input type="checkbox"> Plan next week’s schedule</li>
+            <li><input type="checkbox"> Review meeting notes</li>
+          </ul>
+        </div>
+
+      </div>
+
       <script>
           document.addEventListener('DOMContentLoaded', function() {
             console.log("DOM loaded, creating calendar...");
