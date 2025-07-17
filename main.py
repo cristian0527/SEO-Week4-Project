@@ -20,7 +20,7 @@ app.secret_key = '2c68ac92b8611f9d78c491ca03495f66'
 
 # Added two more scopes to gain access to email so we can send schedule to a user's google calendar 
 SCOPES = [
-    'https://www.googleapis.com/auth/calendar'
+    'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/userinfo.email',
     'openid'
     ]
@@ -61,7 +61,6 @@ def register():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
-
     if form.validate_on_submit():
         user = get_user_by_email(form.email.data)
         if user and bcrypt.check_password_hash(user.hashed_password, form.password.data):
@@ -69,8 +68,14 @@ def login():
             flash('Login successful!', 'success')
             return redirect(url_for('home'))
         else:
-            flash('Login failed, check credentials!', 'danger')
+            flash(f'Login successful as {user.username}!', 'danger')
     return render_template('login.html', title='Login', form=form)
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('home'))
 
 @app.route('/plan')
 def index():
