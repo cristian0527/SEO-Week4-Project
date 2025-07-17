@@ -7,7 +7,7 @@
 </head>
 <body>
   <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-3">
-    <a class="navbar-brand" href="{{ url_for('home') }}">Auth App</a>
+    <a class="navbar-brand" href="{{ url_for('home') }}">Kairos</a>
     <div class="navbar-nav">
       {% if session.user %}
         <a class="nav-link" href="{{ url_for('logout') }}">Logout ({{ session.user }})</a>

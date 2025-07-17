@@ -20,7 +20,7 @@ app.secret_key = '2c68ac92b8611f9d78c491ca03495f66'
 
 # Added two more scopes to gain access to email so we can send schedule to a user's google calendar 
 SCOPES = [
-    'https://www.googleapis.com/auth/calendar'
+    'https://www.googleapis.com/auth/calendar',
     'https://www.googleapis.com/auth/userinfo.email',
     'openid'
     ]
@@ -72,11 +72,12 @@ def logout():
 
 @app.route('/plan')
 def index():
-    if 'user_id' not in session:
+    print(f"Session user: {session.get('user')}")
+    if session['user'] is None:
         flash("Please log in first.")
         return redirect(url_for('login')) 
     
-    creds = load_credentials(session['user_id']) 
+    creds = load_credentials(session['user']) # user_id
     if not creds:
         return redirect(url_for('authorize'))
     
@@ -87,12 +88,12 @@ def index():
 
 @app.route('/authorize')
 def authorize():
-    user_id = session.get('user_id')
-    if 'user_id' not in session:
+    user = session.get('user') # user_id
+    if session['user'] is None:
         flash("Please log in to connect Google Calendar.", "warning")
         return redirect(url_for('login')) 
     
-    creds = load_credentials(user_id)
+    creds = load_credentials('user') # user_id
     if creds:
         return redirect(url_for('index'))  # Already authenticated
 
@@ -106,8 +107,8 @@ def authorize():
 
 @app.route('/oauth2callback')
 def oauth2callback():
-    user_id = session.get('user_id')
-    if 'user_id' not in session:
+    user = session.get('user') # user_id
+    if 'user' not in session: # user_id
         flash("Please log in to complete Google authentication.", "warning")
         return redirect(url_for('login')) 
     
@@ -131,12 +132,14 @@ def oauth2callback():
     else: 
         email = None
     #save_credentials(session['user_id'], creds, google_email=email)
-    save_credentials(user_id, creds, google_email=email)
+    save_credentials(user, creds, google_email=email) # user_id
     
     return redirect(url_for('index'))
 
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=3000, debug=True)
+    import os
+    port = int(os.environ.get("PORT", 3000))
+    app.run(host='0.0.0.0', port=port, debug=True)
 
 
 """
