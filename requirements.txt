@@ -20,3 +20,4 @@ google-auth-httplib2==0.2.0
 google-api-python-client==2.125.0
 google-generativeai==0.3.2
 sqlalchemy
+pytz
