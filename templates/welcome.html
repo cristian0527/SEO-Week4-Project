@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to Kairos - Plan Your Critical Moments</title>
+    <link href="{{ url_for('static', filename='css/welcome.css') }}" rel="stylesheet">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="welcome-nav">
+        <div class="nav-content">
+            <a href="/" class="logo">
+                🔷 Kairos
+            </a>
+            <div class="nav-links">
+                <a href="{{ url_for('login') }}" class="nav-link">Login</a>
+                <a href="{{ url_for('register') }}" class="nav-link">Register</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero-section">
+        <!-- Floating background elements -->
+        <div class="floating-element">📅</div>
+        <div class="floating-element">⚡</div>
+        <div class="floating-element">🎯</div>
+        
+        <div class="hero-content">
+            <h1 class="hero-title">Welcome to Kairos!</h1>
+            <p class="hero-subtitle">
+                Plan your critical moments with AI-powered scheduling, 
+                seamless calendar integration, and intelligent task management.
+            </p>
+            
+            <div class="action-buttons">
+                <a href="{{ url_for('login') }}" class="btn-primary">
+                    Login
+                </a>
+                <a href="{{ url_for('register') }}" class="btn-secondary">
+                    Register
+                </a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features-section">
+        <div class="features-container">
+            <h2 class="features-title">Why Choose Kairos?</h2>
+            
+            <div class="features-grid">
+                <div class="feature-card">
+                    <span class="feature-icon">📅</span>
+                    <h3 class="feature-title">Smart Calendar</h3>
+                    <p class="feature-description">
+                        Sync with Google Calendar and see all your events in one beautiful, interactive view.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">🤖</span>
+                    <h3 class="feature-title">AI-Powered Planning</h3>
+                    <p class="feature-description">
+                        Let Gemini AI create personalized study schedules based on your goals and deadlines.
+                    </p>
+                </div>
+                
+                <div class="feature-card">
+                    <span class="feature-icon">✅</span>
+                    <h3 class="feature-title">Task Management</h3>
+                    <p class="feature-description">
+                        Create tasks that automatically sync to your calendar and track your progress effortlessly.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+</body>
+</html>

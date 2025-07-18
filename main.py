@@ -17,6 +17,7 @@ from sqlalchemy import insert, update
 from models.db_models import tasks
 import pytz
 import re
+import calendar
 
 
 app = Flask(__name__)
@@ -47,6 +48,7 @@ SCOPES = [
     ]
 REDIRECT_URI = 'https://managerricardo-librafrank-3000.codio.io/oauth2callback'
 
+"""
 @app.route('/')
 def home():
     if 'user_id' not in session:
@@ -70,8 +72,191 @@ def home():
                          completed_tasks=completed_tasks,
                          calendar_events=calendar_events)
     #return render_template('home.html', subtitle="Home Page", text="This is the home page.")
+"""
+"""
+@app.route('/')
+def home():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    return redirect(url_for('calendar_view'))
+"""
+
+@app.route('/')
+def welcome():
+    # Landing Page
+    if 'user_id' in session:
+        return redirect(url_for('calendar_view'))
+    else:
+        return render_template('welcome.html')
+
+@app.route('/logout')
+def logout():
+    session.pop('user_id', None)
+    flash('You have been logged out.', 'info')
+    return redirect(url_for('welcome'))  # Redirect to welcome page, not home
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    form = LoginForm()  # Add this line
+    
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        if not email or not password:
+            flash('Email and password are required.', 'danger')
+            return render_template('login.html', form=form)  # Pass form
+        
+        user = get_user_by_email(email)
+        if user and bcrypt.check_password_hash(user.hashed_password, password):
+            session['user_id'] = user.id
+            flash('Login successful!', 'success')
+            return redirect(url_for('calendar_view'))
+        else:
+            flash('Invalid email or password.', 'danger')
+    
+    return render_template('login.html', form=form)
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    form = RegistrationForm()  # Add this line
+    
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # ... your existing validation code ...
+        
+        if get_user_by_email(email):
+            flash('Email already exists. Please log in.', 'danger')
+            return redirect(url_for('login'))
+        
+        hashed_password = bcrypt.generate_password_hash(password).decode('utf-8')
+        user = {
+            'username': username,
+            'email': email,
+            'hashed_password': hashed_password
+        }
+        
+        add_user(user)
+        db_user = get_user_by_email(email)
+        session['user_id'] = db_user.id
+        
+        flash(f'Account created for {username}!', 'success')
+        return redirect(url_for('calendar_view'))
+    
+    return render_template('register.html', form=form)  # Pass form
+
+# DYNAMIC CALENDAR ROUTE
+@app.route('/home')
+@app.route('/calendar')
+@app.route('/calendar/<int:year>/<int:month>')
+def calendar_view(year=None, month=None):
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    # Default to current date if no year/month provided
+    now = datetime.now()
+    if year is None:
+        year = now.year
+    if month is None:
+        month = now.month
+    
+    # Validate month/year
+    if month < 1 or month > 12:
+        month = now.month
+        year = now.year
+    
+    # Calculate previous and next month
+    if month == 1:
+        prev_month = 12
+        prev_year = year - 1
+    else:
+        prev_month = month - 1
+        prev_year = year
+    
+    if month == 12:
+        next_month = 1
+        next_year = year + 1
+    else:
+        next_month = month + 1
+        next_year = year
+    
+    # Get calendar data
+    cal = calendar.monthcalendar(year, month)
+    month_name = calendar.month_name[month]
+    
+    # Get today's date for highlighting
+    today = now.date()
+    
+    # Get tasks for this month
+    pending_tasks = get_pending_tasks(session['user_id'])
+    completed_tasks = get_completed_tasks(session['user_id'])
+    
+    # Filter tasks for current month
+    month_pending_tasks = []
+    month_completed_tasks = []
+    
+    for task in pending_tasks:
+        if task.due_date and task.due_date.year == year and task.due_date.month == month:
+            month_pending_tasks.append(task)
+    
+    for task in completed_tasks:
+        if task.due_date and task.due_date.year == year and task.due_date.month == month:
+            month_completed_tasks.append(task)
+    
+    # Get Google Calendar events for this month
+    calendar_events = []
+    creds = load_credentials(session['user_id'])
+    if creds:
+        try:
+            # Get events for the entire month
+            month_start = datetime(year, month, 1)
+            if month == 12:
+                month_end = datetime(year + 1, 1, 1) - timedelta(days=1)
+            else:
+                month_end = datetime(year, month + 1, 1) - timedelta(days=1)
+            
+            # Set timezone
+            ny_tz = pytz.timezone('America/New_York')
+            month_start = ny_tz.localize(month_start)
+            month_end = ny_tz.localize(month_end.replace(hour=23, minute=59, second=59))
+            
+            # Get events for this month only
+            service = get_calendar_service(creds)
+            events_result = service.events().list(
+                calendarId='primary',
+                timeMin=month_start.isoformat(),
+                timeMax=month_end.isoformat(),
+                maxResults=100,
+                singleEvents=True,
+                orderBy='startTime'
+            ).execute()
+            
+            calendar_events = events_result.get('items', [])
+            
+        except Exception as e:
+            print(f"Error loading calendar events: {e}")
+            flash("Error loading calendar events. Please reconnect your Google Calendar.", "warning")
+    
+    return render_template('calendar_dynamic.html',
+                         calendar_weeks=cal,
+                         month_name=month_name,
+                         year=year,
+                         month=month,
+                         today=today,
+                         prev_year=prev_year,
+                         prev_month=prev_month,
+                         next_year=next_year,
+                         next_month=next_month,
+                         pending_tasks=month_pending_tasks,
+                         completed_tasks=month_completed_tasks,
+                         calendar_events=calendar_events)
 
 
+"""
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     form = RegistrationForm()
@@ -98,7 +283,48 @@ def register():
         print("Form did not validate:", form.errors)
 
     return render_template('register.html', title='Register', form=form)
+"""
+"""
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        email = request.form.get('email')
+        password = request.form.get('password')
+        
+        if not email or not password:
+            flash('Email and password are required.', 'danger')
+            return render_template('login.html')
+        
+        user = get_user_by_email(email)
+        if user and bcrypt.check_password_hash(user.hashed_password, password):
+            session['user_id'] = user.id
+            flash('Login successful!', 'success')
+            return redirect(url_for('calendar_view'))  # Changed from 'home' to 'calendar_view'
+        else:
+            flash('Invalid email or password.', 'danger')
+    
+    return render_template('login.html')
 
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form.get('username')
+        email = request.form.get('email')
+        password = request.form.get('password')
+        confirm_password = request.form.get('confirm_password')
+        
+        # ... your existing validation code ...
+        
+        add_user(user)
+        db_user = get_user_by_email(email)
+        session['user_id'] = db_user.id
+        
+        flash(f'Account created for {username}!', 'success')
+        return redirect(url_for('calendar_view'))  # Changed from 'home' to 'calendar_view'
+    
+    return render_template('register.html')
+"""
+"""
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     form = LoginForm()
@@ -106,10 +332,10 @@ def login():
         user = get_user_by_email(form.email.data)
         if user and bcrypt.check_password_hash(user.hashed_password, form.password.data):
             session['user_id'] = user.id
-            flash('Login successful!', 'success')
+            flash(f'Login successful as {user.username}!', 'success')
             return redirect(url_for('home'))
         else:
-            flash(f'Login successful as {user.username}!', 'danger')
+            flash(f'Login failed. Please try again!', 'danger')
     return render_template('login.html', title='Login', form=form)
 
 @app.route('/logout')
@@ -133,6 +359,7 @@ def index():
     summary = "\n".join([f"{e['start'].get('dateTime', e['start'].get('date'))} - {e['summary']}" for e in events])
     ai_plan = gemini_study_planner(summary)
     return f"<pre>{ai_plan}</pre>"
+"""
 
 @app.route('/todo')
 def todo():
@@ -459,11 +686,239 @@ def scheduler():
     
     return render_template('scheduler.html')
 
-def parse_time_blocks(plan_text):
+def parse_time_blocks_with_dates(plan_text):
     """
+    Parse structured time blocks from Gemini output that includes date headers
+    Returns list of time blocks with start_time, end_time, task, duration, details, and date
+    """
+    time_blocks = []
+    
+    # Split the text into sections by day headers like "**Friday, July 18, 2025**"
+    day_sections = re.split(r'\*\*([A-Za-z]+,\s*[A-Za-z]+\s*\d+,\s*\d+)\*\*', plan_text)
+    
+    current_date = None
+    
+    for i in range(1, len(day_sections), 2):  # Skip first empty section, then take every other
+        if i < len(day_sections) - 1:
+            date_header = day_sections[i].strip()
+            section_content = day_sections[i + 1]
+            
+            # Parse the date from the header
+            try:
+                # Parse dates like "Friday, July 18, 2025"
+                parsed_date = datetime.strptime(date_header, '%A, %B %d, %Y').date()
+                current_date = parsed_date
+            except ValueError:
+                try:
+                    # Try alternative format
+                    parsed_date = datetime.strptime(date_header, '%A, %B %d, %Y').date()
+                    current_date = parsed_date
+                except ValueError:
+                    # If we can't parse the date, use previous date or default
+                    if current_date:
+                        current_date = current_date + timedelta(days=1)
+                    else:
+                        current_date = datetime.now().date()
+            
+            # Now parse time blocks within this day section
+            blocks = re.split(r'\*\*TIME BLOCK \d+\*\*', section_content)
+            
+            for block in blocks[1:]:  # Skip first empty split
+                # Extract time using regex
+                time_match = re.search(r'\*\*Time:\*\* (.+?) - (.+?)\n', block)
+                task_match = re.search(r'\*\*Task:\*\* (.+?)\n', block)
+                duration_match = re.search(r'\*\*Duration:\*\* (.+?)\n', block)
+                details_match = re.search(r'\*\*Details:\*\* (.+?)(?:\n\n|\n\*\*|$)', block, re.DOTALL)
+                
+                if time_match and task_match:
+                    start_time_str = time_match.group(1).strip()
+                    end_time_str = time_match.group(2).strip()
+                    task = task_match.group(1).strip()
+                    duration = duration_match.group(1).strip() if duration_match else ""
+                    details = details_match.group(1).strip() if details_match else ""
+                    
+                    time_blocks.append({
+                        'start_time': start_time_str,
+                        'end_time': end_time_str,
+                        'task': task,
+                        'duration': duration,
+                        'details': details,
+                        'date': current_date  # Add the parsed date
+                    })
+    
+    # Fallback: if no date headers were found, use the original parsing method
+    if not time_blocks:
+        return parse_time_blocks_fallback(plan_text)
+    
+    return time_blocks
+
+def parse_time_blocks_fallback(plan_text):
+    """
+    Fallback parsing method (your original function) when no date headers are found
+    """
+    time_blocks = []
+    
+    # Split by TIME BLOCK sections
+    blocks = re.split(r'\*\*TIME BLOCK \d+\*\*', plan_text)
+    
+    for block in blocks[1:]:  # Skip first empty split
+        # Extract time using regex
+        time_match = re.search(r'\*\*Time:\*\* (.+?) - (.+?)\n', block)
+        task_match = re.search(r'\*\*Task:\*\* (.+?)\n', block)
+        duration_match = re.search(r'\*\*Duration:\*\* (.+?)\n', block)
+        details_match = re.search(r'\*\*Details:\*\* (.+?)(?:\n\n|\n\*\*|$)', block, re.DOTALL)
+        
+        if time_match and task_match:
+            start_time_str = time_match.group(1).strip()
+            end_time_str = time_match.group(2).strip()
+            task = task_match.group(1).strip()
+            duration = duration_match.group(1).strip() if duration_match else ""
+            details = details_match.group(1).strip() if details_match else ""
+            
+            time_blocks.append({
+                'start_time': start_time_str,
+                'end_time': end_time_str,
+                'task': task,
+                'duration': duration,
+                'details': details,
+                'date': None  # No date parsed
+            })
+    
+    return time_blocks
+
+@app.route('/save_schedule', methods=['POST'])
+def save_schedule():
+    if 'user_id' not in session:
+        flash("Please log in first.", "warning")
+        return redirect(url_for('login'))
+    
+    # Get the plan data
+    plan_data = request.form.get('plan_data')
+    goal = request.form.get('goal')
+    
+    if not plan_data:
+        # Try to get from session if not in form
+        current_plan = session.get('current_plan')
+        if current_plan:
+            plan_data = current_plan['plan']
+            goal = current_plan['goal']
+            description = current_plan.get('description', '')
+            deadline_str = current_plan.get('deadline')
+        else:
+            flash("No plan data found.", "danger")
+            return redirect(url_for('scheduler'))
+    else:
+        # Get from session if available
+        current_plan = session.get('current_plan', {})
+        description = current_plan.get('description', '')
+        deadline_str = current_plan.get('deadline')
+    
+    # Check if user has Google Calendar connected
+    creds = load_credentials(session['user_id'])
+    if not creds:
+        flash("Please connect your Google Calendar first.", "warning")
+        return redirect(url_for('authorize'))
+    
+    try:
+        # Parse the time blocks from the plan using the improved parser
+        time_blocks = parse_time_blocks_with_dates(plan_data)
+        
+        if not time_blocks:
+            flash("Could not parse time blocks from the plan.", "danger")
+            return redirect(url_for('scheduler'))
+        
+        # Get timezone and current time
+        import pytz
+        ny_tz = pytz.timezone('America/New_York')
+        current_time = datetime.now(ny_tz)
+        
+        # Parse deadline from session
+        deadline_datetime = None
+        if deadline_str:
+            try:
+                deadline_datetime = datetime.fromisoformat(deadline_str)
+                if deadline_datetime.tzinfo is None:
+                    deadline_datetime = ny_tz.localize(deadline_datetime)
+            except:
+                deadline_datetime = current_time + timedelta(hours=6)  # Default fallback
+        else:
+            deadline_datetime = current_time + timedelta(hours=6)  # Default fallback
+        
+        events_created = 0
+        
+        for i, block in enumerate(time_blocks):
+            # If we have a parsed date from the AI output, use it
+            if block.get('date'):
+                target_date = block['date']
+            else:
+                # Fallback to the old logic if no date was parsed
+                if i == 0:
+                    target_date = detect_start_date_from_description(description, current_time)
+                else:
+                    # Use previous day + 1 or same day logic
+                    prev_block = time_blocks[i-1]
+                    prev_date = prev_block.get('date') or current_time.date()
+                    target_date = prev_date
+            
+            # Parse the time strings
+            try:
+                start_time_obj = datetime.strptime(block['start_time'], '%I:%M %p').time()
+                end_time_obj = datetime.strptime(block['end_time'], '%I:%M %p').time()
+            except ValueError:
+                print(f"Could not parse time: {block['start_time']} - {block['end_time']}")
+                continue
+            
+            # Create datetime objects
+            start_dt = datetime.combine(target_date, start_time_obj)
+            end_dt = datetime.combine(target_date, end_time_obj)
+            
+            # Add timezone info
+            start_dt = ny_tz.localize(start_dt)
+            end_dt = ny_tz.localize(end_dt)
+            
+            # Handle case where end time is before start time (spans midnight)
+            if end_dt <= start_dt:
+                end_dt = end_dt + timedelta(days=1)
+            
+            # Create event description
+            description_text = f"Goal: {goal}\n\n{block['details']}"
+            if block['duration']:
+                description_text += f"\n\nDuration: {block['duration']}"
+            
+            # Create calendar event using your existing function
+            event_id = create_task_event(
+                creds=creds,
+                task_title=block['task'],
+                task_description=description_text,
+                start_time=start_dt.isoformat(),
+                duration_minutes=int((end_dt - start_dt).total_seconds() / 60)
+            )
+            
+            if event_id:
+                events_created += 1
+                print(f"Created event: {block['task']} on {target_date} from {start_dt} to {end_dt}")
+            else:
+                print(f"Failed to create event: {block['task']}")
+        
+        if events_created > 0:
+            flash(f"Successfully created {events_created} calendar events!", "success")
+        else:
+            flash("Failed to create calendar events. Please try again.", "danger")
+            
+    except Exception as e:
+        print(f"Error saving schedule: {e}")
+        import traceback
+        traceback.print_exc()
+        flash("Error saving schedule to calendar. Please try again.", "danger")
+    
+    return redirect(url_for('scheduler'))
+
+"""
+def parse_time_blocks(plan_text):
+    
     Parse the structured time blocks from Gemini output
     Returns list of time blocks with start_time, end_time, task, duration, details
-    """
+    
     time_blocks = []
     
     # Split by TIME BLOCK sections
@@ -492,6 +947,7 @@ def parse_time_blocks(plan_text):
             })
     
     return time_blocks
+"""
 
 def detect_start_date_from_description(description, current_time):
     """
@@ -575,6 +1031,7 @@ def convert_to_datetime_with_future_dates(time_str, base_date, current_time, dea
         except ValueError:
             return None
 
+"""
 @app.route('/save_schedule', methods=['POST'])
 def save_schedule():
     if 'user_id' not in session:
@@ -714,7 +1171,7 @@ def save_schedule():
         flash("Error saving schedule to calendar. Please try again.", "danger")
     
     return redirect(url_for('scheduler'))
-
+"""
 
 def convert_to_datetime(time_str, base_date, current_time, deadline_datetime):
     """
