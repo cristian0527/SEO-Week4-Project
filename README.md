@@ -76,11 +76,11 @@ Follow these steps to get Kairos up and running:
 
 # 🎯 Usage
 
--- Register/Login - Create an account or sign in
--- Connect Google Calendar - Authorize calendar access, if not connected
--- Add Tasks - Create tasks with due dates (auto-syncs to calendar)
--- Use AI Scheduler - Set goals and let Gemini create study plans
--- Navigate Calendar - View tasks and events across any month
+- **Register/Login**: Create an account or sign in  
+- **Connect Google Calendar**: Authorize calendar access, if have not done so  
+- **Add Tasks**: Create tasks with due dates (auto-syncs to calendar)  
+- **Use AI Scheduler**: Set goals and let Gemini create study plans
+- **Navigate Calendar**: View tasks and events across any month
 
 --
 
