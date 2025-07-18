@@ -96,10 +96,11 @@ def login():
     form = LoginForm()
     if form.validate_on_submit():
         user = get_user_by_email(form.email.data)
-        if user and bcrypt.check_password_hash(user.hashed_password, form.password.data):
-            session['user_id'] = user.id
-            flash('Login successful!', 'success')
-            return redirect(url_for('home'))
+        if user and bcrypt.check_password_hash(user['hashed_password'], form.password.data):
+            session['user'] = user['username']
+            n = user['username']
+            flash(f'Login successful as {n}!', 'success')
+            return redirect(url_for('authorize'))
         else:
             flash(f'Failed to login, please check you email and or password!', 'danger')
     return render_template('login.html', title='Login', form=form)
@@ -110,7 +111,31 @@ def logout():
     flash('You have been logged out.', 'info')
     return redirect(url_for('home'))
 
-#tested
+@app.route('/calendar')
+def calendar():
+    if session['user'] is None:
+        flash("Please log in first.")
+        return redirect(url_for('login')) 
+    
+    creds = load_credentials(session['user']) 
+
+    if not creds:
+        return redirect(url_for('authorize'))
+
+    events = list_upcoming_events(creds)
+    
+    # FullCalendar events
+    fc_events = []
+    for e in events:
+        fc_events.append({
+            "title": e['summary'],
+            "start": e['start'].get('dateTime', e['start'].get('date')),
+            "end": e['end'].get('dateTime', e['end'].get('date')),
+        })
+
+    return render_template('calendar.html', fc_events=fc_events)
+
+
 @app.route('/plan')
 def index():
     if session['user'] is None:
@@ -283,8 +308,7 @@ def authorize():
     
     creds = load_credentials(user)
     if creds:
-        flash("Google Calendar already connected!")
-        return redirect(url_for('home'))  # Already authenticated
+        return redirect(url_for('calendar'))  # Already authenticated
 
     flow = Flow.from_client_secrets_file(
         'google_calendar_credentials.json',
@@ -319,14 +343,13 @@ def oauth2callback():
             email = idinfo.get("email")
         except Exception as e:
             print(f"failed to verify id token {e}")
-            #email = None
-    #else: 
-        #email = None
-    save_credentials(session['user_id'], creds, google_email=email)
-    #save_credentials(user_id, creds, google_email=email)
-
-    flash("Google Calendar connected successfully! Your events will now appear on the calendar.", "success")
-    return redirect(url_for('index'))
+            email = None
+    else: 
+        email = None
+    #save_credentials(session['user_id'], creds, google_email=email)
+    save_credentials(user, creds, google_email=email)
+    
+    return redirect(url_for('calendar'))
 
 
 @app.route('/complete_task/<int:task_id>', methods=['POST'])

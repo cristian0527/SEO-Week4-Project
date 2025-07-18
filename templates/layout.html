@@ -42,13 +42,16 @@
       </ul>
     </div>
     <div class="navbar-nav">
-      <a class="nav-link" href="{{ url_for('logout') }}">Logout</a>
-      <a class="nav-link" href="{{ url_for('authorize') }}">📅 Connect Calendar</a>
-    </div>
-    {% else %}
-    <div class="navbar-nav ms-auto">
-      <a class="nav-link" href="{{ url_for('login') }}">Login</a>
-      <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+      {% if session.user %}
+        <a class="nav-link" href="{{ url_for('calendar') }}">Calendar</a>
+        <!-- <a class="nav-link" href="{{ url_for('logout') }}">To-Do</a>
+        <a class="nav-link" href="{{ url_for('logout') }}">Scheduler</a> -->
+        <a class="nav-link" href="{{ url_for('logout') }}">Logout ({{ session.user }})</a>
+        <a class="nav-link" href="{{ url_for('authorize') }}">📅 Connect Calendar</a>
+      {% else %}
+        <a class="nav-link" href="{{ url_for('login') }}">Login</a>
+        <a class="nav-link" href="{{ url_for('register') }}">Register</a>
+      {% endif %}
     </div>
     {% endif %}
   </nav>

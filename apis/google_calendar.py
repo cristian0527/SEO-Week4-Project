@@ -97,8 +97,8 @@ def get_calendar_service(creds):
 
 def list_upcoming_events(creds):
     service = get_calendar_service(creds)
-    now = datetime.utcnow().isoformat() + 'Z'
-    events_result = service.events().list(calendarId='primary', timeMin=now, maxResults=15, singleEvents=True, orderBy='startTime').execute()
+    now = datetime.datetime.utcnow().isoformat() + 'Z'
+    events_result = service.events().list(calendarId='primary', timeMin=now, maxResults=100, singleEvents=True, orderBy='startTime').execute()
 
     return events_result.get('items', [])
 
