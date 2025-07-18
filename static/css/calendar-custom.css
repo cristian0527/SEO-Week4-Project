@@ -1,0 +1,27 @@
+:root {
+  --fc-border-color: black;
+  --fc-daygrid-event-dot-width: 8px;
+  --fc-event-bg-color: #f0ad4e;
+  --fc-event-border-color: #d9534f;
+  --fc-today-bg-color: #e6f7ff;
+  --fc-button-bg-color: #5bc0de;
+  --fc-button-text-color: white;
+  --fc-button-border-color: #46b8da;
+}
+
+#main-layout {
+  display: flex; 
+  gap: 2rem;
+}
+
+#calendar-container {
+  flex: 2; 
+  padding: 1rem; 
+}
+
+#todo-container {
+    flex: 1; 
+    padding: 1rem; 
+    background-color: #f9f9f9; 
+    border: 1px solid #ddd;
+}
