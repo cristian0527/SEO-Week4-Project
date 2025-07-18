@@ -1,6 +1,6 @@
  # 📘 Kairos: Academic Planner with Google Calendar & AI Integration
 
-**Kairos** is an intelligent productivity app that combines Google Calendar integration with AI-powered scheduling to help students and professionals plan their critical moments effectively.
+**Kairos** is an intelligent productivity app that combines Google Calendar integration with AI-powered scheduling to help students and professionals plan their critical moments effectively. Be aware that this is our first sprint given a very small window to implement. Go to "Going Foward" section to see what's to come! 
 
 ---
 
@@ -20,7 +20,7 @@
 
 ---
 
-# 🚀 Quick Setup
+## 🚀 Quick Setup
 
 Follow these steps to get Kairos up and running:
 
@@ -74,13 +74,36 @@ Follow these steps to get Kairos up and running:
 
 ---
 
-# 🎯 Usage
+## 🎯 Usage
 
 - **Register/Login**: Create an account or sign in  
 - **Connect Google Calendar**: Authorize calendar access, if have not done so  
 - **Add Tasks**: Create tasks with due dates (auto-syncs to calendar)  
 - **Use AI Scheduler**: Set goals and let Gemini create study plans
 - **Navigate Calendar**: View tasks and events across any month
+
+--
+
+## 🔮 Going Forward
+
+Here's what's coming in future sprints for Kairos:
+
+### ✨ **Core Feature Expansions**
+- **Editable AI Study Plans** - Do more finetuning on Gemini's scheduling suggestions
+- **Persistent Goal Storage** - Save and revisit AI-generated study plans for future reference
+- **Smart Task Management** - Delete completed todos and better organization tools
+- **Current Day Focus** - Time-blocked view of today's schedule for immediate productivity
+- **Improved UI/UX Design** - Cleaner interfaces, improve accessibility, and high-contrast mode options
+
+### 🎯 **Productivity Features**
+- **Pomodoro Timer Integration** - Built-in focus sessions with break reminders
+- **Lofi Girl Ambiance** - Study music integration for enhanced focus
+- **Advanced Calendar Views** - Multiple viewing modes and better date navigation
+
+### 🛠 **Technical Improvements**
+- **Defensive Programming** - Better error handling and edge case management
+- **Web Hosting Deployment** - Move from local hosting to production-ready platform
+- **Performance Optimization** - Faster load times and smoother API interactions
 
 --
 
