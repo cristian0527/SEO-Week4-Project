@@ -1,0 +1,14 @@
+{% extends "layout.html" %}
+
+{% block title %}Welcome to Kairos{% endblock %}
+
+{% block content %}
+<div class="text-center mt-5">
+  <h1 class="display-4 kairos-brand">Welcome to Kairos!</h1>
+  <p class="lead">Plan YOUR critical moments.</p>
+  <div class="d-grid gap-3 col-6 mx-auto mt-4">
+    <a href="{{ url_for('login') }}" class="btn btn-primary btn-lg">Login</a>
+    <a href="{{ url_for('register') }}" class="btn btn-outline-primary btn-lg">Register</a>
+  </div>
+</div>
+{% endblock %}
