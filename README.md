@@ -16,7 +16,7 @@
 - **🤖 AI-Powered Study Assistant (Gemini API)**  
   Smart study planning, assignment difficulty assessment, and AI-generated note summaries.
 
-- - **🔄 Smart Scheduling** - Handles future dates and multi-day planning
+- **🔄 Smart Scheduling** - Handles future dates and multi-day planning
 
 ---
 
@@ -82,7 +82,7 @@ Follow these steps to get Kairos up and running:
 - **Use AI Scheduler**: Set goals and let Gemini create study plans
 - **Navigate Calendar**: View tasks and events across any month
 
---
+---
 
 ## 🔮 Going Forward
 
@@ -105,7 +105,7 @@ Here's what's coming in future sprints for Kairos:
 - **Web Hosting Deployment** - Move from local hosting to production-ready platform
 - **Performance Optimization** - Faster load times and smoother API interactions
 
---
+---
 
 ## ⚙️ Tech Stack
 
