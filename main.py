@@ -519,7 +519,7 @@ def authorize():
     creds = load_credentials(user_id)
     if creds:
         flash("Google Calendar already connected!")
-        return redirect(url_for('home'))  # Already authenticated
+        return redirect(url_for('calendar_view'))  # Already authenticated
 
     flow = Flow.from_client_secrets_file(
         'google_calendar_credentials.json',
@@ -560,7 +560,7 @@ def oauth2callback():
     #save_credentials(user_id, creds, google_email=email)
 
     flash("Google Calendar connected successfully! Your events will now appear on the calendar.", "success")
-    return redirect(url_for('index'))
+    return redirect(url_for('calendar_view'))
 
 
 @app.route('/complete_task/<int:task_id>', methods=['POST'])
