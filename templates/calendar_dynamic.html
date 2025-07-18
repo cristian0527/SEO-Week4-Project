@@ -1,3 +1,4 @@
+
 {% extends 'layout.html' %}
 {% block title %}Calendar - Kairos{% endblock %}
 {% block content %}
@@ -6,10 +7,14 @@
   <!-- Calendar Section -->
   <div class="col-md-8">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2>📅 July 2025</h2>
+      <h2>📅 {{ month_name }} {{ year }}</h2>
       <div>
-        <button class="btn btn-outline-secondary btn-sm">‹</button>
-        <button class="btn btn-outline-secondary btn-sm">›</button>
+        <a href="{{ url_for('calendar_view', year=prev_year, month=prev_month) }}" 
+           class="btn btn-outline-secondary btn-sm">‹</a>
+        <a href="{{ url_for('calendar_view') }}" 
+           class="btn btn-outline-primary btn-sm mx-2">Today</a>
+        <a href="{{ url_for('calendar_view', year=next_year, month=next_month) }}" 
+           class="btn btn-outline-secondary btn-sm">›</a>
       </div>
     </div>
     
@@ -28,125 +33,135 @@
         </div>
         
         <!-- Dynamic Calendar Days -->
-        {% set days_in_july = [
-          [30, 1, 2, 3, 4, 5, 6],
-          [7, 8, 9, 10, 11, 12, 13],
-          [14, 15, 16, 17, 18, 19, 20],
-          [21, 22, 23, 24, 25, 26, 27],
-          [28, 29, 30, 31, 1, 2, 3]
-        ] %}
-        
-        {% for week in days_in_july %}
+        {% for week in calendar_weeks %}
         <div class="row">
           {% for day in week %}
           <div class="col calendar-day p-0 border" style="min-height: 120px; max-height: 120px;">
-            <!-- Day Header -->
-            <div class="day-header d-flex justify-content-between align-items-center p-2 {% if day == 17 %}bg-primary text-white{% endif %}">
-              <span class="day-number {% if day == 30 or (loop.index0 == 4 and day <= 3) %}text-muted{% elif day == 17 %}fw-bold{% endif %}">
-                {{ day }}
-              </span>
-              {% if day == 17 %}
-                <span class="badge bg-light text-primary">Today</span>
-              {% endif %}
-            </div>
-            
-            <!-- Events Container -->
-            <div class="events-container p-1" style="height: 85px; overflow-y: auto;">
-              {% set day_date = '2025-07-' + ('%02d'|format(day)) %}
-              {% set events_for_day = [] %}
+            {% if day == 0 %}
+              <!-- Empty cell for days from other months -->
+              <div class="day-header p-2" style="min-height: 35px;"></div>
+              <div class="events-container p-1" style="height: 85px;"></div>
+            {% else %}
+              <!-- Actual day cell -->
+              {% set current_date = year|string + '-' + ('%02d'|format(month)) + '-' + ('%02d'|format(day)) %}
+              {% set is_today = (today.year == year and today.month == month and today.day == day) %}
               
-              <!-- Collect tasks for this day -->
-              {% for task in pending_tasks %}
-                {% if task.due_date and task.due_date.strftime('%Y-%m-%d') == day_date %}
-                  {% set _ = events_for_day.append({
-                    'type': 'task',
-                    'title': task.title,
-                    'time': task.due_date.strftime('%I:%M %p') if task.due_date else '',
-                    'description': task.description or 'No description',
-                    'completed': False,
-                    'color': 'warning'
-                  }) %}
+              <!-- Day Header -->
+              <div class="day-header d-flex justify-content-between align-items-center p-2 {% if is_today %}bg-primary text-white{% endif %}">
+                <span class="day-number {% if is_today %}fw-bold{% endif %}">{{ day }}</span>
+                {% if is_today %}
+                  <span class="badge bg-light text-primary">Today</span>
                 {% endif %}
-              {% endfor %}
+              </div>
               
-              {% for task in completed_tasks %}
-                {% if task.due_date and task.due_date.strftime('%Y-%m-%d') == day_date %}
-                  {% set _ = events_for_day.append({
-                    'type': 'task',
-                    'title': task.title,
-                    'time': task.due_date.strftime('%I:%M %p') if task.due_date else '',
-                    'description': task.description or 'No description',
-                    'completed': True,
-                    'color': 'success'
-                  }) %}
-                {% endif %}
-              {% endfor %}
-              
-              <!-- Add Google Calendar events -->
-              {% if calendar_events %}
-                {% for event in calendar_events %}
-                  {% set event_date = '' %}
-                  {% if event.start.get('date') %}
-                    {% set event_date = event.start.get('date') %}
-                  {% elif event.start.get('dateTime') %}
-                    {% set event_date = event.start.get('dateTime')[:10] %}
-                  {% endif %}
-                  
-                  {% if event_date == day_date %}
-                    {% set event_time = '' %}
-                    {% if event.start.get('dateTime') %}
-                      {% set event_time = event.start.get('dateTime')[11:16] %}
-                    {% endif %}
-                    
+              <!-- Events Container -->
+              <div class="events-container p-1" style="height: 85px; overflow-y: auto;">
+                {% set events_for_day = [] %}
+                
+                <!-- Collect tasks for this day -->
+                {% for task in pending_tasks %}
+                  {% if task.due_date and task.due_date.strftime('%Y-%m-%d') == current_date %}
                     {% set _ = events_for_day.append({
-                      'type': 'calendar',
-                      'title': event.summary,
-                      'time': event_time,
-                      'description': event.get('description', 'Google Calendar Event'),
+                      'type': 'task',
+                      'title': task.title,
+                      'time': task.due_date.strftime('%I:%M %p') if task.due_date else '',
+                      'description': task.description or 'No description',
                       'completed': False,
-                      'color': 'info'
+                      'color': 'warning'
                     }) %}
                   {% endif %}
                 {% endfor %}
-              {% endif %}
-              
-              <!-- Display events as clickable badges -->
-              {% for event in events_for_day %}
-                <div class="event-badge mb-1" 
-                     data-bs-toggle="modal" 
-                     data-bs-target="#eventModal"
-                     data-title="{{ event.title }}"
-                     data-time="{{ event.time }}"
-                     data-description="{{ event.description }}"
-                     data-type="{{ event.type }}"
-                     style="cursor: pointer;">
-                  <div class="badge bg-{{ event.color }} text-dark d-block text-start text-truncate" 
-                       style="font-size: 10px; max-width: 100%;"
-                       title="{{ event.title }} - {{ event.time }}">
-                    <div class="d-flex align-items-center">
-                      {% if event.completed %}
-                        <span class="me-1">✓</span>
-                      {% elif event.type == 'task' %}
-                        <span class="me-1">📝</span>
-                      {% else %}
-                        <span class="me-1">📅</span>
-                      {% endif %}
-                      <span class="text-truncate">{{ event.title[:12] }}{% if event.title|length > 12 %}...{% endif %}</span>
-                    </div>
-                    {% if event.time %}
-                      <div class="text-muted" style="font-size: 8px;">{{ event.time }}</div>
+                
+                {% for task in completed_tasks %}
+                  {% if task.due_date and task.due_date.strftime('%Y-%m-%d') == current_date %}
+                    {% set _ = events_for_day.append({
+                      'type': 'task',
+                      'title': task.title,
+                      'time': task.due_date.strftime('%I:%M %p') if task.due_date else '',
+                      'description': task.description or 'No description',
+                      'completed': True,
+                      'color': 'success'
+                    }) %}
+                  {% endif %}
+                {% endfor %}
+                
+                <!-- Add Google Calendar events -->
+                {% if calendar_events %}
+                  {% for event in calendar_events %}
+                    {% set event_date = '' %}
+                    {% if event.start.get('date') %}
+                      {% set event_date = event.start.get('date') %}
+                    {% elif event.start.get('dateTime') %}
+                      {% set event_date = event.start.get('dateTime')[:10] %}
                     {% endif %}
+                    
+                    {% if event_date == current_date %}
+                      {% set event_time = '' %}
+                      {% if event.start.get('dateTime') %}
+                        {% set event_time_raw = event.start.get('dateTime')[11:16] %}
+                        {% set hour = event_time_raw[:2]|int %}
+                        {% set minute = event_time_raw[3:5] %}
+                        {% if hour == 0 %}
+                          {% set event_time = '12:' + minute + ' AM' %}
+                        {% elif hour < 12 %}
+                          {% set event_time = hour|string + ':' + minute + ' AM' %}
+                        {% elif hour == 12 %}
+                          {% set event_time = '12:' + minute + ' PM' %}
+                        {% else %}
+                          {% set event_time = (hour - 12)|string + ':' + minute + ' PM' %}
+                        {% endif %}
+                      {% endif %}
+                      
+                      {% set _ = events_for_day.append({
+                        'type': 'calendar',
+                        'title': event.summary,
+                        'time': event_time,
+                        'description': event.get('description', 'Google Calendar Event'),
+                        'completed': False,
+                        'color': 'info'
+                      }) %}
+                    {% endif %}
+                  {% endfor %}
+                {% endif %}
+                
+                <!-- Display events as clickable badges -->
+                {% for event in events_for_day %}
+                  <div class="event-badge mb-1" 
+                       data-bs-toggle="modal" 
+                       data-bs-target="#eventModal"
+                       data-title="{{ event.title }}"
+                       data-time="{{ event.time }}"
+                       data-description="{{ event.description }}"
+                       data-type="{{ event.type }}"
+                       style="cursor: pointer;">
+                    <div class="badge bg-{{ event.color }} text-dark d-block text-start text-truncate" 
+                         style="font-size: 10px; max-width: 100%;"
+                         title="{{ event.title }} - {{ event.time }}">
+                      <div class="d-flex align-items-center">
+                        {% if event.completed %}
+                          <span class="me-1">✓</span>
+                        {% elif event.type == 'task' %}
+                          <span class="me-1">📝</span>
+                        {% else %}
+                          <span class="me-1">📅</span>
+                        {% endif %}
+                        <span class="text-truncate">{{ event.title[:12] }}{% if event.title|length > 12 %}...{% endif %}</span>
+                      </div>
+                      {% if event.time %}
+                        <div class="text-muted" style="font-size: 8px;">{{ event.time }}</div>
+                      {% endif %}
+                    </div>
                   </div>
-                </div>
-              {% endfor %}
-              
-              <!-- Show count if too many events -->
-              {% if events_for_day|length > 4 %}
-                <div class="text-muted text-center" style="font-size: 9px;">
-                  {{ events_for_day|length }} events
-                </div>
-              {% endif %}
-            </div>
+                {% endfor %}
+                
+                <!-- Show count if too many events -->
+                {% if events_for_day|length > 4 %}
+                  <div class="text-muted text-center" style="font-size: 9px;">
+                    {{ events_for_day|length }} events
+                  </div>
+                {% endif %}
+              </div>
+            {% endif %}
           </div>
           {% endfor %}
         </div>
@@ -184,7 +199,7 @@
       </div>
       {% endfor %}
     {% else %}
-      <p class="text-muted">No pending tasks. Add one above!</p>
+      <p class="text-muted">No pending tasks for {{ month_name }}. Add one above!</p>
     {% endif %}
     
     <hr class="my-4">
@@ -209,7 +224,7 @@
       </div>
       {% endfor %}
     {% else %}
-      <p class="text-muted">No completed tasks yet.</p>
+      <p class="text-muted">No completed tasks for {{ month_name }}.</p>
     {% endif %}
   </div>
 </div>

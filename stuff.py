@@ -1,3 +1,301 @@
+"""google-auth
+google-auth-oauthlib
+google-auth-httplib2
+google-api-python-client
+google-generativeai
+sqlalchemy
+flask-bcrypt
+google.genai
+
+Flask==2.3.3
+flask-bcrypt==1.0.1
+flask-wtf==1.1.1
+flask-behind-proxy==0.1.0
+wtforms==3.1.1
+email_validator>=1.2.1
+
+google-auth==2.29.0
+google-auth-oauthlib==1.2.0
+google-auth-httplib2==0.2.0
+google-api-python-client==2.125.0
+google-generativeai==0.3.2
+sqlalchemy
+pytz"
+"""
+"""
+def convert_to_datetime(time_str, base_date):
+    """
+    #Convert time string like "9:24 PM" to datetime object
+    """
+    try:
+        # Parse time like "9:24 PM" or "09:24 PM"
+        time_obj = datetime.strptime(time_str, '%I:%M %p').time()
+        return datetime.combine(base_date, time_obj)
+    except ValueError:
+        try:
+            # Try without leading zero
+            time_obj = datetime.strptime(time_str, '%H:%M').time()
+            return datetime.combine(base_date, time_obj)
+        except ValueError:
+            return None
+
+@app.route('/save_schedule', methods=['POST'])
+def save_schedule():
+    if 'user_id' not in session:
+        flash("Please log in first.", "warning")
+        return redirect(url_for('login'))
+    
+    # Get the plan data
+    plan_data = request.form.get('plan_data')
+    goal = request.form.get('goal')
+    
+    if not plan_data:
+        # Try to get from session if not in form
+        current_plan = session.get('current_plan')
+        if current_plan:
+            plan_data = current_plan['plan']
+            goal = current_plan['goal']
+        else:
+            flash("No plan data found.", "danger")
+            return redirect(url_for('scheduler'))
+    
+    # Check if user has Google Calendar connected
+    creds = load_credentials(session['user_id'])
+    if not creds:
+        flash("Please connect your Google Calendar first.", "warning")
+        return redirect(url_for('authorize'))
+    
+    try:
+        # Parse the time blocks from the plan
+        time_blocks = parse_time_blocks(plan_data)
+        
+        if not time_blocks:
+            flash("Could not parse time blocks from the plan.", "danger")
+            return redirect(url_for('scheduler'))
+        
+        # Get timezone
+        ny_tz = pytz.timezone('America/New_York')
+        today = datetime.now(ny_tz).date()
+        
+        events_created = 0
+        
+        for block in time_blocks:
+            # Convert time strings to datetime objects
+            start_dt = convert_to_datetime(block['start_time'], today)
+            end_dt = convert_to_datetime(block['end_time'], today)
+            
+            if start_dt and end_dt:
+                # Add timezone info
+                start_dt = ny_tz.localize(start_dt)
+                end_dt = ny_tz.localize(end_dt)
+                
+                # Handle overnight times (if end time is before start time, it's next day)
+                if end_dt <= start_dt:
+                    end_dt = end_dt + timedelta(days=1)
+                
+                # Create event description
+                description = f"Goal: {goal}\n\n{block['details']}"
+                if block['duration']:
+                    description += f"\n\nDuration: {block['duration']}"
+                
+                # Create calendar event using your existing function
+                event_id = create_task_event(
+                    creds=creds,
+                    task_title=block['task'],
+                    task_description=description,
+                    start_time=start_dt.isoformat(),
+                    duration_minutes=int((end_dt - start_dt).total_seconds() / 60)
+                )
+                
+                if event_id:
+                    events_created += 1
+                else:
+                    print(f"Failed to create event: {block['task']}")
+        
+        if events_created > 0:
+            flash(f"Successfully created {events_created} calendar events!", "success")
+        else:
+            flash("Failed to create calendar events. Please try again.", "danger")
+            
+    except Exception as e:
+        print(f"Error saving schedule: {e}")
+        flash("Error saving schedule to calendar. Please try again.", "danger")
+    
+    return redirect(url_for('scheduler'))
+"""
+"""
+@app.route('/save_schedule', methods=['POST'])
+def save_schedule():
+    if 'user_id' not in session:
+        flash("Please log in first.", "warning")
+        return redirect(url_for('login'))
+    
+    plan_data = request.form.get('plan_data')
+    goal = request.form.get('goal')
+    
+    # Check if user has Google Calendar connected
+    creds = load_credentials(session['user_id'])
+    if not creds:
+        flash("Please connect your Google Calendar first.", "warning")
+        return redirect(url_for('authorize'))
+    
+    # TODOO: Parse the plan_data and create calendar events
+    # For now, just show success message
+    flash("Schedule saved to your Google Calendar!", "success")
+    return redirect(url_for('scheduler'))
+"""
+
+
+@app.route('/scheduler', methods=['GET', 'POST'])
+def scheduler():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        goal = request.form.get('goal')
+        description = request.form.get('description')
+        deadline_str = request.form.get('deadline')
+        deadline_time_str = request.form.get('deadline_time', '23:59')  # Default to end of day if no time
+        
+        if not goal or not description or not deadline_str:
+            flash("Goal, description, and deadline are required.", "danger")
+            return render_template('scheduler.html')
+        
+        # Parse deadline with time
+        try:
+            # Combine date and time
+            deadline_datetime = datetime.strptime(f"{deadline_str} {deadline_time_str}", '%Y-%m-%d %H:%M')
+        except ValueError:
+            flash("Invalid deadline format.", "danger")
+            return render_template('scheduler.html')
+        
+        # Get current time
+        #current_time = datetime.now()
+        ny_tz = pytz.timezone('America/New_York')
+        current_time = datetime.now(ny_tz)
+        
+        # Check if deadline is in the past
+        if deadline_datetime <= current_time:
+            flash("Deadline must be in the future.", "danger")
+            return render_template('scheduler.html')
+        
+        # Get user's calendar for context
+        creds = load_credentials(session['user_id'])
+        calendar_summary = ""
+        if creds:
+            try:
+                events = list_upcoming_events(creds)
+                calendar_summary = "\n".join([
+                    f"{e['start'].get('dateTime', e['start'].get('date'))} - {e['summary']}" 
+                    for e in events
+                ])
+            except Exception:
+                calendar_summary = "No calendar events available"
+        
+        # Generate AI study plan with improved prompt
+        current_time = datetime.now()
+        prompt = f"""
+        You are a study scheduler. Create a specific, actionable study plan.
+        
+        Goal: {goal}
+        Description: {description}
+        Current time: {current_time.strftime('%A, %B %d, %Y at %I:%M %p')}
+        Deadline: {deadline_datetime.strftime('%A, %B %d, %Y at %I:%M %p')}
+        
+        Create a study plan with specific time blocks starting RIGHT NOW until the deadline ONLY. 
+        Format each block as:
+        - Date & Time: [exact time]
+        - Task: [specific task]
+        - Duration: [how long]
+
+        Stop at the deadline. Do not plan beyond {deadline_datetime.strftime('%B %d, %Y at %I:%M %p')}.
+        """
+        
+        try:
+            ai_plan = gemini_study_planner(prompt)
+            
+            # Store the plan data in session for saving to calendar later
+            session['current_plan'] = {
+                'goal': goal,
+                'description': description,
+                'deadline': deadline_datetime.isoformat(),
+                'plan': ai_plan,
+                'created_at': current_time.isoformat()
+            }
+            
+            return render_template('scheduler.html', plan=ai_plan, goal=goal)
+        except Exception as e:
+            print(f"Error generating study plan: {e}")
+            flash("Error generating study plan. Please try again.", "danger")
+            return render_template('scheduler.html')
+    
+    return render_template('scheduler.html')
+
+
+"""
+@app.route('/scheduler', methods=['GET', 'POST'])
+def scheduler():
+    if 'user_id' not in session:
+        return redirect(url_for('login'))
+    
+    if request.method == 'POST':
+        goal = request.form.get('goal')
+        description = request.form.get('description')
+        deadline_str = request.form.get('deadline')
+        
+        if not goal or not description or not deadline_str:
+            flash("Goal, description, and deadline are required.", "danger")
+            return render_template('scheduler.html')
+        
+        # Parse deadline
+        try:
+            deadline = datetime.strptime(deadline_str, '%Y-%m-%d')
+        except ValueError:
+            flash("Invalid deadline format.", "danger")
+            return render_template('scheduler.html')
+        
+        # Get user's calendar for context
+        creds = load_credentials(session['user_id'])
+        calendar_summary = ""
+        if creds:
+            try:
+                events = list_upcoming_events(creds)
+                calendar_summary = "\n".join([
+                    f"{e['start'].get('dateTime', e['start'].get('date'))} - {e['summary']}" 
+                    for e in events
+                ])
+            except Exception:
+                calendar_summary = "No calendar events available"
+        
+        # Generate AI study plan
+        #Deadline: {deadline.strftime('%A, %B %d, %Y')}
+        prompt = f"""
+        #Goal: {goal}
+        #Description: {description}
+        #Current time: {current_time.strftime('%A, %B %d, %Y at %I:%M %p')}
+        #Deadline: {deadline_datetime.strftime('%A, %B %d, %Y at %I:%M %p')}
+        
+        #Current calendar:
+        #{calendar_summary}
+        
+        #Please create a study plan with specific time blocks, avoiding conflicts with the schedule above.
+        """
+        
+        try:
+            ai_plan = gemini_study_planner(prompt)
+            return render_template('scheduler.html', plan=ai_plan, goal=goal)
+        except Exception as e:
+            flash("Error generating study plan. Please try again.", "danger")
+            return render_template('scheduler.html')
+    
+    return render_template('scheduler.html')
+"""
+
+
+
+
+
+
 """
 @app.route('/add_task', methods=['POST'])
 def add_task():
